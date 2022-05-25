@@ -1,3 +1,5 @@
+#!/Library/Frameworks/Python.framework/Versions/3.10/bin/python3
+
 import asyncio
 import audioop
 import copy
@@ -11,6 +13,7 @@ import pygame
 from deepgram import Deepgram
 from deepgram.transcription import LiveTranscription
 
+import secrets
 
 # Data structure to help associate words with their timestamps.
 # We display Deepgram's transcription, but we need to track the individual words to make old lines scroll away.
@@ -80,7 +83,7 @@ class SubtitleDisplay:
         it won't fit on the shirt. We need to display each line for a bit, then move on.
         The problem is that we need to use interim mode for responsiveness, so parts of the transcript will change.
         By carefully tracking the individual words as well as the transcripts, we can use timestamps to
-        figure out which SOUNDS have been shown to the viewer, so we don't end up showing the same WORDS repeatedly.  
+        figure out which SOUNDS have been shown to the viewer, so we don't end up showing the same WORDS repeatedly.
         '''
         self.minimum_line_display_time = 0.75  # Minimum number of seconds that each word should display on the top line
         self.timebase = None  # Datetime when first word of this caption set was displayed
@@ -147,7 +150,7 @@ class SubtitleDisplay:
             '''
             Final transcripts don't change. By tracking them separately, we don't need to compare every incoming word
             to every received word and constantly update every transcript. We just clobber the interim stuff with
-            the new and ignore the final stuff. 
+            the new and ignore the final stuff.
             There should only be a single interim request going at a time, but Murphy's got my number.
             '''
             if is_final:
@@ -167,10 +170,10 @@ class SubtitleDisplay:
                 self.interim_words = words
 
             '''
-            Writing support for multiple concurrent interim transcripts would be a nightmare, but Deepgram's docs 
+            Writing support for multiple concurrent interim transcripts would be a nightmare, but Deepgram's docs
             assure me that they only maintain one interim transcript at a time.
-            But I have trust issues, and wacky TCP shenanigans are also in play. 
-            Instead of solving a bug that I'm not sure exists, I want my code to bring its presence to my attention. 
+            But I have trust issues, and wacky TCP shenanigans are also in play.
+            Instead of solving a bug that I'm not sure exists, I want my code to bring its presence to my attention.
             By crashing.
             Premature optimization is the root of all evil! Don't solve problems until they exist!
             '''
@@ -202,11 +205,11 @@ class SubtitleDisplay:
         print('Transcription interpreter loop is dead')
 
     '''
-    It doesn't matter how fast I talk - the subtitles are meaningless unless the viewer has time to read 'em. 
-    When every word on the top line has been displayed for a sec or so, we want to scroll the whole 
-    thing up to show more transcript. Remember that I'm an obnoxious bastard AND the display is small - I can 
-    overflow the whole screen with just PART of a sentence. 
-    Even if I'm still talkin, we need to keep those captions rolling. 
+    It doesn't matter how fast I talk - the subtitles are meaningless unless the viewer has time to read 'em.
+    When every word on the top line has been displayed for a sec or so, we want to scroll the whole
+    thing up to show more transcript. Remember that I'm an obnoxious bastard AND the display is small - I can
+    overflow the whole screen with just PART of a sentence.
+    Even if I'm still talkin, we need to keep those captions rolling.
     '''
     async def expiration_timing_loop(self):
         while not self.done:
@@ -388,7 +391,7 @@ class SubtitleDisplay:
             # remove the text we just blitted
             text = text[i:]
 
-        textbox = pygame.transform.rotate(textbox, 90)
+        # textbox = pygame.transform.rotate(textbox, 90)
         self.display.blit(textbox, (0, 0))
         return output
 
@@ -399,7 +402,7 @@ class SubtitleHoodie:
 
     def __init__(self):
         # Your Deepgram API Key
-        self.DEEPGRAM_API_KEY = 'PUT YOUR API KEY HERE YOU JABRONI'
+        self.DEEPGRAM_API_KEY = secrets.DEEPGRAM_API_KEY
         self.FRAMES_PER_BUFFER = 8192  # We need to read audio samples seriously fast, or its tiny buffer overflows
         self.SAMPLE_RATE = 44100  # I want more samples for faster peak detection
 
@@ -414,7 +417,7 @@ class SubtitleHoodie:
         # The font's licensing is unclear, so I'm not including it here.
         project_root = os.path.dirname(os.path.abspath(__file__))
         subtitle_font = pygame.font.Font(os.path.join(project_root, 'res/VCR_OSD_MONO_1.001.ttf'), 125)
-        lcd = pygame.display.set_mode((480, 1280), pygame.FULLSCREEN)
+        lcd = pygame.display.set_mode((1280, 480))
         self.subtitle_display = SubtitleDisplay(lcd, subtitle_font)
 
     # Simple callback that dumps the response straight in the transcription queue.
@@ -454,12 +457,12 @@ class SubtitleHoodie:
         print('Audio interfaces:')
         for i in range(p.get_device_count()):
             interface_name = p.get_device_info_by_index(i)["name"]
-            print(f'  {i}: {interface_name}')
-            if 'iqaudiocodec' in interface_name.casefold():
+            print(f'  {i}: {interface_name.casefold()}')
+            if 'dante via 16 channel' in interface_name.casefold():
                 iqaudio_product_index = i
 
         if iqaudio_product_index == -1:
-            raise RuntimeError('IQAudio product (Codec Zero) not found!')
+            raise RuntimeError('Dante Via 16 Channel not found!')
 
         print(f'Mic input index: {iqaudio_product_index}')
 
