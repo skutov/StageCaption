@@ -1,3 +1,4 @@
-/secrets.py
+/api_secrets.py
 /res/VCR_OSD_MONO_1.001.ttf
 *.DS_Store
+/__pycache__

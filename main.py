@@ -13,7 +13,7 @@ import pygame
 from deepgram import Deepgram
 from deepgram.transcription import LiveTranscription
 
-import secrets
+import api_secrets
 
 # Data structure to help associate words with their timestamps.
 # We display Deepgram's transcription, but we need to track the individual words to make old lines scroll away.
@@ -402,7 +402,6 @@ class SubtitleHoodie:
 
     def __init__(self):
         # Your Deepgram API Key
-        self.DEEPGRAM_API_KEY = secrets.DEEPGRAM_API_KEY
         self.FRAMES_PER_BUFFER = 8192  # We need to read audio samples seriously fast, or its tiny buffer overflows
         self.SAMPLE_RATE = 44100  # I want more samples for faster peak detection
 
@@ -479,7 +478,7 @@ class SubtitleHoodie:
         self.subtitle_display.start_the_loops_brother()
 
         # OH MY GOD IT'S HAPPENING
-        deepgram = Deepgram(self.DEEPGRAM_API_KEY)
+        deepgram = Deepgram(api_secrets.DEEPGRAM_API_KEY)
 
         deepgram_live: LiveTranscription = await self.create_live_transcription_websocket(deepgram)
         print('Created initial live websocket')
